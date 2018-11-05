@@ -1,0 +1,45 @@
+swagger: '2.0'
+info:
+  title: Ilene API
+  description: API
+  version: '1.0.0'
+basePath: /api/v1
+
+paths:
+  '/streams':
+    get:
+      summary: Get information about streams
+      operationId: 'streams'
+      responses:
+        200:
+          description: Streams information
+          schema:
+            $ref: '#/definitions/streams_info'
+
+definitions:
+  streams_info:
+    type: object
+    properties:
+      list:
+        $ref: '#/definitions/streams_list'
+  streams_list:
+    type: array
+    description: Streams list
+    items:
+      $ref: '#/definitions/stream'
+  stream:
+    type: object
+    description: Stream information
+    required:
+      - key
+      - length
+    properties:
+      key:
+        type: string
+        description: Stream key name
+        example: my-queue
+      length:
+        type: integer
+        description: Number of entries inside a stream
+        format: int64
+        example: 1

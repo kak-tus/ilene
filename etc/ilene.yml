@@ -1,0 +1,16 @@
+api:
+  schema: '${ILENE_DATA_DIR}ilene/api.yml'
+  addr: ':8080'
+
+model:
+  redis:
+    addrs: { _ref: { name: "ILENE_REDIS_ADDRS" } }
+
+log:
+  tag: ilene
+  level: debug
+  output: stdsep
+  format: json
+  formatConfig:
+    colors: false
+    disableTimestamp: true
