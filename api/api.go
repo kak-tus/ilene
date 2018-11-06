@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"git.aqq.me/go/app/appconf"
 	"git.aqq.me/go/app/applog"
@@ -38,7 +39,7 @@ func init() {
 				mdl: model.Get(),
 			}
 
-			doc, err := oas.LoadFile(cnf.Schema)
+			doc, err := oas.LoadFile(filepath.Join(cnf.DataDir, cnf.Schema))
 			if err != nil {
 				return err
 			}
@@ -57,7 +58,9 @@ func init() {
 
 			baseRouter := chi.NewRouter()
 			baseRouter.Use(crs.Handler)
-			baseRouter.Use(middleware.SetHeader("Content-Type", "application/json"))
+
+			dir := http.Dir(filepath.Join(cnf.DataDir, cnf.HTTPDir))
+			baseRouter.Mount("/*", http.StripPrefix("/", http.FileServer(dir)))
 
 			errReqHandler := obj.middlewareRequestErrorHandler()
 			queryValidator := oas.QueryValidator(errReqHandler)
@@ -73,6 +76,7 @@ func init() {
 				oas.Use(queryValidator),
 				oas.Use(bodyValidator),
 				oas.Use(respValidator),
+				oas.Use(middleware.SetHeader("Content-Type", "application/json")),
 			)
 
 			if err != nil {

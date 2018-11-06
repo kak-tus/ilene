@@ -20,7 +20,7 @@ RUN adduser -DH user
 USER user
 
 ENV \
-  ILENE_DATA_DIR=/data/ \
+  ILENE_DATA_DIR=/data \
   ILENE_REDIS_ADDRS=
 
 EXPOSE 8080

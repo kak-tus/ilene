@@ -1,5 +1,7 @@
 api:
-  schema: '${ILENE_DATA_DIR}ilene/api.yml'
+  dataDir: '${ILENE_DATA_DIR}'
+  httpDir: 'ilene'
+  schema: 'ilene/api.yml'
   addr: ':8080'
 
 model:

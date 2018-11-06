@@ -18,6 +18,8 @@ type Type struct {
 }
 
 type apiConfig struct {
-	Schema string
-	Addr   string
+	DataDir string
+	HTTPDir string
+	Schema  string
+	Addr    string
 }
