@@ -1,3 +1,7 @@
+2019-03-02 v0.1.5
+  - Support for specify redis addrs in URL format. Backward compatible.
+  - Password support.
+
 2019-03-02 v0.1.4
   - Prometheus exporter for Redis Cluster Streams.
   - Stream types: sharded and full (sharded summary).

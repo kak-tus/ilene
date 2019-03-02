@@ -25,8 +25,26 @@ func init() {
 
 			addrs := strings.Split(cnf.Redis.Addrs, ",")
 
+			var parsed []string
+			var pass string
+
+			for _, a := range addrs {
+				opt, err := redis.ParseURL(a)
+
+				if err == nil {
+					// New format
+					parsed = append(parsed, opt.Addr)
+					pass = opt.Password
+				} else {
+					// Backward compatible
+					// TODO FIX remove
+					parsed = append(parsed, a)
+				}
+			}
+
 			rDB := redis.NewClusterClient(&redis.ClusterOptions{
-				Addrs: addrs,
+				Addrs:    parsed,
+				Password: pass,
 			})
 
 			obj = &Type{
