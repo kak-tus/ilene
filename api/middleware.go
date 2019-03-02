@@ -1,13 +1,14 @@
 package api
 
 import (
+	"bytes"
 	"net/http"
 
 	oas "github.com/hypnoglow/oas2"
 )
 
 func (a *Type) middlewareRequestErrorHandler() oas.RequestErrorHandler {
-	return func(w http.ResponseWriter, req *http.Request, err error) (resume bool) {
+	return func(w http.ResponseWriter, r *http.Request, err error) (resume bool) {
 		switch err.(type) {
 		case oas.ValidationError:
 			e := err.(oas.ValidationError)
@@ -22,9 +23,14 @@ func (a *Type) middlewareRequestErrorHandler() oas.RequestErrorHandler {
 }
 
 func (a *Type) middlewareResponseErrorHandler() oas.ResponseErrorHandler {
-	return func(w http.ResponseWriter, req *http.Request, err error) {
+	return func(w http.ResponseWriter, r *http.Request, err error) {
 		switch err.(type) {
 		case oas.ValidationError:
+			// TODO FIX
+			// How to do correct - I don't know
+			// Search special code in response
+			w.Write([]byte("RESP_ERROR"))
+
 			e := err.(oas.ValidationError)
 			a.respondClientErrors(w, e.Errors())
 		default:
@@ -71,4 +77,38 @@ func (a *Type) respondClientErrors(w http.ResponseWriter, errs []error) {
 	if err != nil {
 		a.log.Error(err)
 	}
+}
+
+func (a *Type) middlewarePostResponse() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			pw := &postResponseWriter{ResponseWriter: w}
+			next.ServeHTTP(pw, r)
+
+			// TODO FIX
+			// How to do correct - I don't know
+			// Search special code in response
+			pos := bytes.Index(pw.data, []byte("RESP_ERROR"))
+			if pos >= 0 {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write(pw.data[pos+10:])
+				return
+			}
+
+			if pw.code > 0 {
+				w.WriteHeader(pw.code)
+			}
+			w.Write(pw.data)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func (w *postResponseWriter) WriteHeader(code int) {
+	w.code = code
+}
+
+func (w *postResponseWriter) Write(p []byte) (int, error) {
+	w.data = append(w.data, p...)
+	return len(p), nil
 }

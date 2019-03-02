@@ -1,3 +1,6 @@
+2019-03-02 v0.1.6
+  - Correct response in case of errors.
+
 2019-03-02 v0.1.5
   - Support for specify redis addrs in URL format. Backward compatible.
   - Password support.

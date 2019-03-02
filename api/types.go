@@ -27,3 +27,9 @@ type apiConfig struct {
 	HTTPDir string
 	Schema  string
 }
+
+type postResponseWriter struct {
+	code int
+	data []byte
+	http.ResponseWriter
+}

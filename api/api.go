@@ -52,7 +52,9 @@ func init() {
 			}
 
 			handlers := oas.OperationHandlers{
-				"streams": obj,
+				"streams": http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					obj.streams(w, r)
+				}),
 			}
 
 			crs := cors.New(cors.Options{
@@ -65,6 +67,7 @@ func init() {
 
 			baseRouter := chi.NewRouter()
 			baseRouter.Use(crs.Handler)
+			baseRouter.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 			dir := http.Dir(filepath.Join(cnf.DataDir, cnf.HTTPDir))
 			baseRouter.Mount("/*", http.StripPrefix("/", http.FileServer(dir)))
@@ -84,8 +87,8 @@ func init() {
 				oas.Base(oas.ChiAdapter(baseRouter)),
 				oas.Use(queryValidator),
 				oas.Use(bodyValidator),
+				oas.Use(obj.middlewarePostResponse()),
 				oas.Use(respValidator),
-				oas.Use(middleware.SetHeader("Content-Type", "application/json")),
 			)
 
 			if err != nil {
@@ -132,7 +135,7 @@ func (a *Type) Start() {
 	}
 }
 
-func (a *Type) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (a *Type) streams(w http.ResponseWriter, r *http.Request) {
 	info := a.mdl.ListStreams()
 
 	err := jsoniter.NewEncoder(w).Encode(info)
