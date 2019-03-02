@@ -2,6 +2,8 @@ package api
 
 import (
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/json-iterator/go"
 	"github.com/kak-tus/ilene/model"
@@ -10,16 +12,18 @@ import (
 
 // Type type
 type Type struct {
-	cnf apiConfig
-	log *zap.SugaredLogger
-	enc jsoniter.API
-	srv *http.Server
-	mdl *model.Type
+	cnf  apiConfig
+	enc  jsoniter.API
+	lock *sync.Mutex
+	log  *zap.SugaredLogger
+	mdl  *model.Type
+	srv  *http.Server
+	tick *time.Ticker
 }
 
 type apiConfig struct {
+	Addr    string
 	DataDir string
 	HTTPDir string
 	Schema  string
-	Addr    string
 }

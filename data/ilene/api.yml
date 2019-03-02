@@ -33,6 +33,7 @@ definitions:
     required:
       - key
       - length
+      - type
     properties:
       key:
         type: string
@@ -43,3 +44,10 @@ definitions:
         description: Number of entries inside a stream
         format: int64
         example: 1
+      type:
+        type: string
+        description: Stream type
+        example: full
+        enum:
+          - full
+          - sharded

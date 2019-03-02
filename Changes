@@ -1,3 +1,7 @@
+2019-03-02 v0.1.4
+  - Prometheus exporter for Redis Cluster Streams.
+  - Stream types: sharded and full (sharded summary).
+
 2018-11-07 v0.1.3
   - Embed resources.
 

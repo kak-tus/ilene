@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 	"path/filepath"
+	"sync"
+	"time"
 
 	"git.aqq.me/go/app/appconf"
 	"git.aqq.me/go/app/applog"
@@ -14,6 +16,7 @@ import (
 	"github.com/iph0/conf"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kak-tus/ilene/model"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var obj *Type
@@ -29,14 +32,18 @@ func init() {
 				return err
 			}
 
+			srv := &http.Server{
+				Addr: cnf.Addr,
+			}
+
 			obj = &Type{
-				cnf: cnf,
-				log: applog.GetLogger().Sugar(),
-				enc: jsoniter.Config{UseNumber: true}.Froze(),
-				srv: &http.Server{
-					Addr: cnf.Addr,
-				},
-				mdl: model.Get(),
+				cnf:  cnf,
+				enc:  jsoniter.Config{UseNumber: true}.Froze(),
+				lock: &sync.Mutex{},
+				log:  applog.GetLogger().Sugar(),
+				mdl:  model.Get(),
+				srv:  srv,
+				tick: time.NewTicker(time.Second * 30),
 			}
 
 			doc, err := oas.LoadFile(filepath.Join(cnf.DataDir, cnf.Schema))
@@ -61,6 +68,8 @@ func init() {
 
 			dir := http.Dir(filepath.Join(cnf.DataDir, cnf.HTTPDir))
 			baseRouter.Mount("/*", http.StripPrefix("/", http.FileServer(dir)))
+
+			baseRouter.Mount("/metrics", promhttp.Handler())
 
 			errReqHandler := obj.middlewareRequestErrorHandler()
 			queryValidator := oas.QueryValidator(errReqHandler)
@@ -99,6 +108,9 @@ func init() {
 				return err
 			}
 
+			obj.tick.Stop()
+			obj.lock.Lock()
+
 			obj.log.Info("Stopped API")
 			return nil
 		},
@@ -112,6 +124,8 @@ func GetAPI() *Type {
 
 // Start API
 func (a *Type) Start() {
+	a.metrics()
+
 	err := a.srv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		a.log.Error(err)
